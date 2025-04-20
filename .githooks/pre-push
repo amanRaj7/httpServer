@@ -59,11 +59,11 @@ NC='\033[0m' # No Color
 echo -e "Pushing to remote: ${GREEN}$remote${NC}"
 echo -e "URL: ${GREEN}$url${NC}"
 echo "-----------------------------------------------------"
-cat $(pwd)\\.git\\hooks\\aman.txt
+cat $(pwd)/.githooks/aman.txt
 echo -e "Welcome to ${BLUE}amanRaj7${NC}! Your commit was received successfully."
 echo "-----------------------------------------------------"
 
-SRC_FILE=$(pwd)\\src\\main.cpp
+SRC_FILE=$(pwd)/src/main.cpp
 OUT_FILE="main"
 g++ -std=c++17 "$SRC_FILE" -o "$OUT_FILE" # compile
 # Run
