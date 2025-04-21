@@ -7,13 +7,18 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <vector>
+
+// Function
+std::vector<std::string> trim(const std::string &str);
+
 
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  std::cout << "Server: Logs from your program will appear here!\n";
+  std::cout << "Server: Logs from server will appear here!\n";
 
 
   // Create a socket
@@ -56,9 +61,55 @@ int main(int argc, char **argv) {
   int client = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
   std::cout << "Server: Client connected\n";
 
-  std::string message = "HTTP/1.1 200 OK\r\n";
+
+  // Get the client's IP address and path
+  char recv_buffer[1024];
+  ssize_t bytes_received = recv(client, recv_buffer, sizeof(recv_buffer) - 1, 0);
+  if (bytes_received < 0) {
+    std::cerr << "Failed to receive data from client\n";
+    close(client);
+  }
+  recv_buffer[bytes_received] = '\0'; // Null-terminate
+  std::cout << "\nServer: Received data" <<"\n";
+  std::vector<std::string> lines;
+  lines = trim(std::string(recv_buffer));
+  for(auto line : lines){
+    std::cout<<"Server: "<<line<<"\n";
+  }
+
+  // Parse the request to get the path
+  std::string request(recv_buffer);
+  size_t start = request.find(" ");
+  size_t end = request.find(" ", start + 1);
+  std::string path = request.substr(start + 1, end - start - 1);
+  std::cout << "Server: Requested path {" << path << "}\n";
+
+  // Send a response to the client
+  std::string message;
+  if(path == "/"||path == "/index.html"){
+    message = "HTTP/1.1 200 OK\r\n";
+    close(server_fd);
+  }else{
+    message = "HTTP/1.1 404 Not Found\r\n\r\n";
+    
+  }
   send(client, message.c_str(), message.length(), 0);
-  close(server_fd);
+
 
   return 0;
+}
+
+
+/*
+  * Function to trim the string by splitting it into lines
+*/
+std::vector<std::string> trim(const std::string &str) {
+  std::vector<std::string> lines;
+  size_t start = 0, end = 0;
+  while ((end = str.find("\r\n", start)) != std::string::npos) {
+    lines.push_back(str.substr(start, end - start));
+    start = end + 2;
+  }
+  lines.push_back(str.substr(start)); 
+  return lines;
 }

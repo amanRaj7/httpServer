@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # An example hook script to verify what is about to be pushed.  Called by "git
 # push" after it has checked the remote status, but before anything has been
@@ -63,16 +63,17 @@ cat $(pwd)/.githooks/aman.txt
 echo -e "Welcome to ${BLUE}amanRaj7${NC}! Your commit was received successfully."
 echo "-----------------------------------------------------"
 
-SRC_FILE=$(pwd)/src/main.cpp
-OUT_FILE="main"
-g++ -std=c++17 "$SRC_FILE" -o "$OUT_FILE" # compile
-# Run
-if [ $? -eq 0 ]; then
-    echo "✅ Compilation successful. Running program..."
-    echo "-----------------------------"
-    ./"$OUT_FILE"
-    echo "-----------------------------"
-else
-    echo "❌ Compilation failed."
-fi
+# SRC_FILE=$(pwd)/src/main.cpp
+# OUT_FILE="main"
+# g++ -std=c++17 "$SRC_FILE" -o "$OUT_FILE" # compile
+# # Run
+# if [ $? -eq 0 ]; then
+#     echo "✅ Compilation successful. Running program..."
+#     echo "-----------------------------"
+#     ./"$OUT_FILE"
+#     echo "-----------------------------"
+# else
+#     echo "❌ Compilation failed."
+# fi
+./runServer.sh
 exit 0
