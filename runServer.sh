@@ -25,6 +25,4 @@ echo -e "${BLUE}Server PID: $SERVER_PID${NC}"
 # Wait for server to start
 sleep 2
 
-# Request
-echo "${pwd}"
-./test01.sh
+

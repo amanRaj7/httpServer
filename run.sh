@@ -15,3 +15,7 @@ echo -e "Welcome to ${BLUE}amanRaj7${NC}! Code execution started."
 echo "-----------------------------------------------------"
 
 ./runServer.sh
+
+# Request
+echo "${pwd}"
+./test01.sh
