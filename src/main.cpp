@@ -89,9 +89,15 @@ int main(int argc, char **argv) {
   if(path == "/"||path == "/index.html"){
     message = "HTTP/1.1 200 OK\r\n";
     close(server_fd);
+  }else if(path.find("/echo") == 0){
+    // Extract the echo request from the path
+    std::string echo_req = path.substr(6);
+    std::cout << "Echo request: " << echo_req << "\n";
+    int echo_len = echo_req.length();
+    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(echo_len)+"\r\n\r\n";
+    message += echo_req;
   }else{
     message = "HTTP/1.1 404 Not Found\r\n\r\n";
-    
   }
   send(client, message.c_str(), message.length(), 0);
 
