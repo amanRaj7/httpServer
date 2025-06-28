@@ -75,5 +75,5 @@ echo "-----------------------------------------------------"
 # else
 #     echo "❌ Compilation failed."
 # fi
-./runServer.sh
+./run.sh
 exit 0
