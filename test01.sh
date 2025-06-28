@@ -10,7 +10,7 @@ NC='\033[0m'
 echo -e "${BLUE}\nSending test requests:\n${BLUE}"
 
 URLS=(
-  "http://localhost:4221/echo/aman"
+ "curl -v --header "User-Agent: foobar/1.2.3" http://localhost:4221/user-agent", "http://localhost:4221/echo/aman"
 )
 
 for url in "${URLS[@]}"; do
