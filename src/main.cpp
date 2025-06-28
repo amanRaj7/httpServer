@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     // Extract the User-Agent from the request headers
     std::string user_agent_value = request.substr(request.find("User-Agent: ") + 12, request.find("\r\n", request.find("User-Agent: ")) - (request.find("User-Agent: ") + 12));
     std::cout << "User-Agent: " << user_agent_value << "\n";
-    std::string message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
+    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
     message += user_agent_value;
   }else{
     message = "HTTP/1.1 404 Not Found\r\n\r\n";
