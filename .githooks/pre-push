@@ -75,5 +75,5 @@ echo "-----------------------------------------------------"
 # else
 #     echo "❌ Compilation failed."
 # fi
-./run.sh
+./test.sh
 exit 0

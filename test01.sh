@@ -15,10 +15,11 @@ URLS=(
 )
 
 for url in "${URLS[@]}"; do
-  echo "➡️ Request: $url"
-  echo -e ${GREEN}
+  echo -e "${BLUE}\n➡️ Request: $url${NC}"
+  echo -e "${GREEN}"
   eval "$url"
-  echo -e ${NC}
+  sleep 1
+  echo -e "${NC}"
   echo -e "\n-----------------------------\n"
 done
 
