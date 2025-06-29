@@ -10,6 +10,10 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <sstream>
+
+// Base Directory
+std::string base_directory = "";
 
 // Function
 std::vector<std::string> trim(const std::string &str);
@@ -17,6 +21,13 @@ void handleClient(const int client);
 
 
 int main(int argc, char **argv) {
+
+  for (int i = 1; i < argc - 1; ++i) {
+    if (std::string(argv[i]) == "--directory") {
+        base_directory += argv[i + 1];
+    }
+  }
+
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
@@ -126,7 +137,9 @@ void handleClient(const int client){
   std::string message;
   if(path == "/"||path == "/index.html"){
     message = "HTTP/1.1 200 OK\r\n";
-
+    send(client, message.c_str(), message.length(), 0);
+    close(client);
+    return;
   }else if(path.find("/echo") == 0){
     // Extract the echo request from the path
     std::string echo_req = path.substr(6);
@@ -134,16 +147,52 @@ void handleClient(const int client){
     int echo_len = echo_req.length();
     message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(echo_len)+"\r\n\r\n";
     message += echo_req;
-
+    send(client, message.c_str(), message.length(), 0);
+    close(client);
+    return;
   }else if(path.find("/user-agent") == 0){
     // Extract the User-Agent from the request headers
     std::string user_agent_value = request.substr(request.find("User-Agent: ") + 12, request.find("\r\n", request.find("User-Agent: ")) - (request.find("User-Agent: ") + 12));
     std::cout << "User-Agent: " << user_agent_value << "\n";
     message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
     message += user_agent_value;
-    
-  }else{
-    message = "HTTP/1.1 404 Not Found\r\n\r\n";
+    send(client, message.c_str(), message.length(), 0);
+    close(client);
+    return;
+  }else if(path.find("/files") == 0){
+    // Extract file name from the request header
+    std::string file_path =base_directory+path.substr(6);
+    std::cout << "File request: " << file_path << "\n";
+
+    // Open the requested file
+    FILE *file = fopen(file_path.c_str(), "r");
+    if (file == nullptr) {
+      std::cerr << "File not exist" << file_path << "\n";
+      std::string message = "HTTP/1.1 404 Not Found\r\n\r\n";
+      send(client, message.c_str(), message.length(), 0);
+      close(client);
+      return;
+    }
+
+    // Read the file content
+    std::ostringstream file_content;
+    char buffer[1024];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+      file_content.write(buffer, bytes_read);
+    }
+    fclose(file);
+
+    // Send the file content as the response
+    message = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length:" + std::to_string(file_content.str().length()) + "\r\n\r\n" + file_content.str();
+    send(client, message.c_str(), message.length(), 0);
+    close(client);
+    return;
   }
-  send(client, message.c_str(), message.length(), 0);
+  else{
+    message = "HTTP/1.1 404 Not Found\r\n\r\n";
+    send(client, message.c_str(), message.length(), 0);
+    close(client);
+    return;
+  }
 }

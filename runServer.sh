@@ -18,7 +18,7 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}Compilation succeeded!${NC}"
 echo -e "${BLUE}Starting server on port 4221...${NC}"
-./"$OUT_FILE" &
+./"$OUT_FILE" "$@"&
 SERVER_PID=$!
 echo -e "${BLUE}Server PID: $SERVER_PID${NC}"
 

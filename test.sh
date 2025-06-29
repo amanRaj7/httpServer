@@ -6,7 +6,7 @@ GREEN='\033[1;32m'
 BLUE='\033[1;34m'
 NC='\033[0m'
 
-./runServer.sh
+./runServer.sh --directory /tmp
 
 # Request
 echo "${pwd}"
