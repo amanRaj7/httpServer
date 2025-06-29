@@ -8,9 +8,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 // Function
 std::vector<std::string> trim(const std::string &str);
+void handleClient(const int client);
 
 
 int main(int argc, char **argv) {
@@ -53,59 +56,23 @@ int main(int argc, char **argv) {
     return 1;
   }
   
+  while(true){
+  // client addr
   struct sockaddr_in client_addr;
   int client_addr_len = sizeof(client_addr);
     
   std::cout << "Server: Waiting for a client to connect...\n";
   
   int client = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+  if(client<0){
+    std::cout << "Server: Failed to accept client connection\n";
+  }
   std::cout << "Server: Client connected\n";
 
-
-  // Get the client's IP address and path
-  char recv_buffer[1024];
-  ssize_t bytes_received = recv(client, recv_buffer, sizeof(recv_buffer) - 1, 0);
-  if (bytes_received < 0) {
-    std::cerr << "Failed to receive data from client\n";
-    close(client);
-  }
-  recv_buffer[bytes_received] = '\0'; // Null-terminate
-  std::cout << "\nServer: Received data" <<"\n";
-  std::vector<std::string> lines;
-  lines = trim(std::string(recv_buffer));
-  for(auto line : lines){
-    std::cout<<"Server: "<<line<<"\n";
+  std::thread(handleClient, client).detach();
   }
 
-  // Parse the request to get the path
-  std::string request(recv_buffer);
-  size_t start = request.find(" ");
-  size_t end = request.find(" ", start + 1);
-  std::string path = request.substr(start + 1, end - start - 1);
-  std::cout << "Server: Requested path {" << path << "}\n";
-
-  // Send a response to the client
-  std::string message;
-  if(path == "/"||path == "/index.html"){
-    message = "HTTP/1.1 200 OK\r\n";
-    close(server_fd);
-  }else if(path.find("/echo") == 0){
-    // Extract the echo request from the path
-    std::string echo_req = path.substr(6);
-    std::cout << "Echo request: " << echo_req << "\n";
-    int echo_len = echo_req.length();
-    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(echo_len)+"\r\n\r\n";
-    message += echo_req;
-  }else if(path.find("/user-agent") == 0){
-    // Extract the User-Agent from the request headers
-    std::string user_agent_value = request.substr(request.find("User-Agent: ") + 12, request.find("\r\n", request.find("User-Agent: ")) - (request.find("User-Agent: ") + 12));
-    std::cout << "User-Agent: " << user_agent_value << "\n";
-    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
-    message += user_agent_value;
-  }else{
-    message = "HTTP/1.1 404 Not Found\r\n\r\n";
-  }
-  send(client, message.c_str(), message.length(), 0);
+  
 
 
   return 0;
@@ -124,4 +91,59 @@ std::vector<std::string> trim(const std::string &str) {
   }
   lines.push_back(str.substr(start)); 
   return lines;
+}
+
+/*
+  * Function handle each client seprately
+*/
+// Get the client's IP address and path
+void handleClient(const int client){
+  char recv_buffer[1024];
+  ssize_t bytes_received = recv(client, recv_buffer, sizeof(recv_buffer) - 1, 0);
+
+  if (bytes_received < 0) {
+    std::cerr << "Failed to receive data from client\n";
+    close(client);
+  }
+
+  recv_buffer[bytes_received] = '\0'; // Null-terminate
+  std::cout << "\nServer: Received data" <<"\n";
+  std::vector<std::string> lines;
+  lines = trim(std::string(recv_buffer));
+
+  for(auto line : lines){
+    std::cout<<"Server: "<<line<<"\n";
+  }
+
+  // Parse the request to get the path
+  std::string request(recv_buffer);
+  size_t start = request.find(" ");
+  size_t end = request.find(" ", start + 1);
+  std::string path = request.substr(start + 1, end - start - 1);
+  std::cout << "Server: Requested path {" << path << "}\n";
+
+  // Send a response to the client
+  std::string message;
+  if(path == "/"||path == "/index.html"){
+    message = "HTTP/1.1 200 OK\r\n";
+
+  }else if(path.find("/echo") == 0){
+    // Extract the echo request from the path
+    std::string echo_req = path.substr(6);
+    std::cout << "Echo request: " << echo_req << "\n";
+    int echo_len = echo_req.length();
+    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(echo_len)+"\r\n\r\n";
+    message += echo_req;
+
+  }else if(path.find("/user-agent") == 0){
+    // Extract the User-Agent from the request headers
+    std::string user_agent_value = request.substr(request.find("User-Agent: ") + 12, request.find("\r\n", request.find("User-Agent: ")) - (request.find("User-Agent: ") + 12));
+    std::cout << "User-Agent: " << user_agent_value << "\n";
+    message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
+    message += user_agent_value;
+    
+  }else{
+    message = "HTTP/1.1 404 Not Found\r\n\r\n";
+  }
+  send(client, message.c_str(), message.length(), 0);
 }
