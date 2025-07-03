@@ -193,15 +193,6 @@ void handleClient(const int client){
     close(client);
     return;
   }
-  else if(method == "POST") {
-    size_t path_start = request.find(' ') + 1;
-    size_t path_end = request.find(' ', path_start);
-    path = request.substr(path_start, path_end - path_start);
-
-    post_request(path, request, client);
-    close(client);
-    return;
-  }
   else{
     message = "HTTP/1.1 404 Not Found\r\n\r\n";
     send(client, message.c_str(), message.length(), 0);
