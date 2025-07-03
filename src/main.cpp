@@ -18,6 +18,7 @@ std::string base_directory = "";
 // Function
 std::vector<std::string> trim(const std::string &str);
 void handleClient(const int client);
+void post_request(std::string path, std::string request, int client);
 
 
 int main(int argc, char **argv) {
@@ -209,6 +210,9 @@ void handleClient(const int client){
   }
 }
 
+/*
+  * Function handle Post Request
+*/
 void post_request(std::string path, std::string request, int client){
   if(path.find("/files")==0){
     std::string file_path = base_directory + path.substr(6); 
