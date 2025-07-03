@@ -140,7 +140,8 @@ void handleClient(const int client){
     send(client, message.c_str(), message.length(), 0);
     close(client);
     return;
-  }else if(path.find("/echo") == 0){
+  }
+  else if(path.find("/echo") == 0){
     // Extract the echo request from the path
     std::string echo_req = path.substr(6);
     std::cout << "Echo request: " << echo_req << "\n";
@@ -150,7 +151,8 @@ void handleClient(const int client){
     send(client, message.c_str(), message.length(), 0);
     close(client);
     return;
-  }else if(path.find("/user-agent") == 0){
+  }
+  else if(path.find("/user-agent") == 0){
     // Extract the User-Agent from the request headers
     std::string user_agent_value = request.substr(request.find("User-Agent: ") + 12, request.find("\r\n", request.find("User-Agent: ")) - (request.find("User-Agent: ") + 12));
     std::cout << "User-Agent: " << user_agent_value << "\n";
@@ -159,7 +161,8 @@ void handleClient(const int client){
     send(client, message.c_str(), message.length(), 0);
     close(client);
     return;
-  }else if(path.find("/files") == 0){
+  }
+  else if(path.find("/files") == 0){
     // Extract file name from the request header
     std::string file_path =base_directory+path.substr(6);
     std::cout << "File request: " << file_path << "\n";
@@ -189,10 +192,51 @@ void handleClient(const int client){
     close(client);
     return;
   }
+  else if(method == "POST") {
+    size_t path_start = request.find(' ') + 1;
+    size_t path_end = request.find(' ', path_start);
+    path = request.substr(path_start, path_end - path_start);
+
+    post_request(path, request, client);
+    close(client);
+    return;
+  }
   else{
     message = "HTTP/1.1 404 Not Found\r\n\r\n";
     send(client, message.c_str(), message.length(), 0);
     close(client);
     return;
+  }
+}
+
+void post_request(std::string path, std::string request, int client){
+  if(path.find("/files")==0){
+    std::string file_path = base_directory + path.substr(6); 
+    std::cout << "File request: " << file_path << "\n";
+
+    // Extract the file content from the request
+    size_t content_start = request.find("\r\n\r\n") + 4;
+    std::string file_content = request.substr(content_start);
+
+    // Open the file for writing
+    FILE *file = fopen(file_path.c_str(), "w");
+    if (file == nullptr) {
+      std::cerr << "Failed to open file for writing: " << file_path << "\n";
+      std::string message = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+      send(client, message.c_str(), message.length(), 0);
+      close(client);
+      return;
+    }
+
+    // Write the content to the file
+    fwrite(file_content.c_str(), 1, file_content.length(), file);
+    fclose(file);
+
+    // Send a response indicating success
+    std::string message = "HTTP/1.1 201 Created\r\n\r\n";
+    send(client, message.c_str(), message.length(), 0);
+  } else {
+    std::string message = "HTTP/1.1 404 Not Found\r\n\r\n";
+    send(client, message.c_str(), message.length(), 0);
   }
 }
