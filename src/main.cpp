@@ -19,12 +19,13 @@ std::string base_directory = "";
 std::vector<std::string> trim(const std::string &str);
 void handleClient(const int client);
 void post_request(std::string path, std::string request, int client);
+void get_request(std::string path, std::string request, int client);
 
 
 int main(int argc, char **argv) {
 
   for (int i = 1; i < argc - 1; ++i) {
-    if (std::string(argv[i]) == "--directory") {
+    if ( (i+1<argc) && (std::string(argv[i]) == "--directory") ) {
         base_directory += argv[i + 1];
     }
   }
@@ -131,15 +132,33 @@ void handleClient(const int client){
   std::string request(recv_buffer);
   size_t start = request.find(" ");
   size_t end = request.find(" ", start + 1);
+  std::string method = request.substr(0, start);
   std::string path = request.substr(start + 1, end - start - 1);
   std::cout << "Server: Requested path {" << path << "}\n";
 
+  std::cout << "method: " << method << std::endl;
+  if(method=="GET"){
+    get_request(path, request, client);
+    close(client);
+  }
+  else if(method=="POST"){
+    post_request(path, request, client);
+    close(client);
+  }
+  else{
+    std::cerr << "Unsupported HTTP request";
+  }
+}
+
+/*
+  * Function handle get request
+*/
+void get_request(std::string path, std::string request, int client){
   // Send a response to the client
   std::string message;
   if(path == "/"||path == "/index.html"){
-    message = "HTTP/1.1 200 OK\r\n";
+    message = "HTTP/1.1 200 OK\r\n\r\n";
     send(client, message.c_str(), message.length(), 0);
-    close(client);
     return;
   }
   else if(path.find("/echo") == 0){
@@ -150,7 +169,6 @@ void handleClient(const int client){
     message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(echo_len)+"\r\n\r\n";
     message += echo_req;
     send(client, message.c_str(), message.length(), 0);
-    close(client);
     return;
   }
   else if(path.find("/user-agent") == 0){
@@ -160,7 +178,6 @@ void handleClient(const int client){
     message = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:"+std::to_string(user_agent_value.length())+"\r\n\r\n";
     message += user_agent_value;
     send(client, message.c_str(), message.length(), 0);
-    close(client);
     return;
   }
   else if(path.find("/files") == 0){
@@ -174,7 +191,6 @@ void handleClient(const int client){
       std::cerr << "File not exist" << file_path << "\n";
       std::string message = "HTTP/1.1 404 Not Found\r\n\r\n";
       send(client, message.c_str(), message.length(), 0);
-      close(client);
       return;
     }
 
@@ -190,13 +206,11 @@ void handleClient(const int client){
     // Send the file content as the response
     message = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length:" + std::to_string(file_content.str().length()) + "\r\n\r\n" + file_content.str();
     send(client, message.c_str(), message.length(), 0);
-    close(client);
     return;
   }
   else{
     message = "HTTP/1.1 404 Not Found\r\n\r\n";
     send(client, message.c_str(), message.length(), 0);
-    close(client);
     return;
   }
 }

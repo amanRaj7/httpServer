@@ -21,8 +21,7 @@ echo -e "${BLUE}Starting server on port 4221...${NC}"
 ./"$OUT_FILE" "$@"&
 SERVER_PID=$!
 echo -e "${BLUE}Server PID: $SERVER_PID${NC}"
+echo "$SERVER_PID" > server.pid
 
-# Wait for server to start
+# Wait for setup
 sleep 2
-
-

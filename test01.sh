@@ -10,13 +10,6 @@ NC='\033[0m'
 echo -e "${BLUE}\nPrepare test file${NC}"
 echo -n 'Hello, World!' > /tmp/foo
 
-# Simulate raw HTTP GET requests concurrently
-echo -e "${BLUE}\nLaunching background netcat (nc) requests:\n${NC}"
-
-(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
-(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
-(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
-
 # Send curl requests
 echo -e "${BLUE}\nSending test requests:\n${BLUE}"
 
@@ -24,7 +17,8 @@ URLS=(
   "curl -i --header 'User-Agent: foobar/1.2.3' http://localhost:4221/user-agent"
   "curl -i http://localhost:4221/echo/aman"
   "curl -i http://localhost:4221/files/foo"
-  "curl -v --data '12345' -H 'Content-Type: application/octet-stream' http://localhost:4221/files/file_123"
+  "curl -i --data '12345' -H 'Content-Type: application/octet-stream' http://localhost:4221/files/file_123"
+  "curl -i http://localhost:4221/files/file_123"
 )
 
 for url in "${URLS[@]}"; do
@@ -35,4 +29,18 @@ for url in "${URLS[@]}"; do
   echo -e "\n-----------------------------\n"
 done
 
+# Simulate raw HTTP GET requests concurrently
+echo -e "${BLUE}\nLaunching background netcat (nc) requests:\n${NC}"
+
+(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
+(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
+(sleep 3 && printf "GET / HTTP/1.1\r\n\r\n") | nc localhost 4221 &
+
+sleep 5
+
 echo -e "${GREEN}Done!${NC}"
+
+# Kill the server process
+SERVER_PID=$(cat server.pid)
+echo -e "${BLUE}Stopping server(PID: $SERVER_PID)...${NC}"
+kill $SERVER_PID
